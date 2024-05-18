@@ -1,0 +1,40 @@
+version: '3.9'
+services:
+  db:
+    # Официальный образ PostgreSQL из Docker Hub
+    image: postgres
+    # Перезапуск контейнера всегда при падении
+    restart: always
+    # Переменные окружения для PostgreSQL
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: docker_postgres_test_bd
+    # Путь к папке с данными, которые нужно сохранять
+    volumes:
+      # В папку pgdata мы будем сохранять данные из /var/lib/postgresql/data
+      - ./pgdata:/var/lib/postgresql/data
+      # Добавление скриптов для инициализации базы данных
+      - ./initdb:/docker-entrypoint-initdb.d
+    # Пробрасываем порты
+    ports:
+      - 5433:5432
+
+  server:
+    # Используем пользовательский Dockerfile для сервера
+    build: ./server
+    # Перезапуск контейнера всегда при падении
+    restart: always
+    # Зависимость от базы данных
+    depends_on:
+      - db
+    # Переменные окружения для подключения к базе данных
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: root
+      DB_NAME: docker_postgres_test_bd
+    # Пробрасываем порты
+    ports:
+      - 3000:3000
